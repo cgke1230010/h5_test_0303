@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>远程测试 - 点击游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            max-width: 1000px;
+            width: 100%;
+        }
+        
+        .game-header {
+            background: #2d3748;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .game-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            background: #4a5568;
+            padding: 10px;
+            color: white;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #68d391;
+        }
+        
+        .game-canvas-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            background: #1a202c;
+        }
+        
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .game-controls {
+            padding: 20px;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+        
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #dd6b20;
+            transform: translateY(-2px);
+        }
+        
+        .game-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #ebf8ff;
+            border-radius: 10px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .deploy-info {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f0fff4;
+            border-radius: 10px;
+            border: 2px dashed #48bb78;
+        }
+        
+        .deploy-info h3 {
+            color: #2f855a;
+            margin-bottom: 10px;
+        }
+        
+        .url-box {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #c6f6d5;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .game-canvas-container {
+                height: 400px;
+            }
+            
+            .game-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>🎮 远程点击游戏测试平台</h1>
+            <p>随时随地测试你的游戏 - 无需安装任何软件</p>
+        </div>
+        
+        <div class="game-stats">
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div>得分</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="clicks">0</div>
+                <div>点击次数</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="time">60</div>
+                <div>剩余时间</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="level">1</div>
+                <div>关卡</div>
+            </div>
+        </div>
+        
+        <div class="game-canvas-container">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+        
+        <div class="game-controls">
+            <div class="control-buttons">
+                <button class="btn-primary" onclick="startGame()">▶️ 开始游戏</button>
+                <button class="btn-warning" onclick="resetGame()">🔄 重新开始</button>
+                <button class="btn-success" onclick="nextLevel()">🚀 下一关</button>
+                <button class="btn-primary" onclick="saveProgress()">💾 保存进度</button>
+                <button class="btn-warning" onclick="shareGame()">📤 分享游戏</button>
+            </div>
+            
+            <div class="game-info">
+                <h3>🎯 游戏说明</h3>
+                <p>点击画布上的目标物体获得分数。每个关卡有不同的目标和挑战。</p>
+                <p><strong>当前目标：</strong> <span id="currentTarget">点击彩色方块</span></p>
+            </div>
+            
+            <div class="deploy-info">
+                <h3>🌐 部署信息</h3>
+                <p>这个游戏已经准备好部署到云端：</p>
+                <div class="url-box" id="gameUrl">等待生成部署URL...</div>
+                <p>部署方式：</p>
+                <ol>
+                    <li>将整个文件夹上传到 GitHub Pages / Vercel / Netlify</li>
+                    <li>或使用命令：<code>npx serve .</code> 本地测试</li>
+                    <li>扫描二维码在手机测试：<div id="qrcode"></div></li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script>
+        // 游戏状态
+        let gameState = {
+            score: 0,
+            clicks: 0,
+            timeLeft: 60,
+            level: 1,
+            isRunning: false,
+            targets: [],
+            gameLoop: null
+        };
+
+        // 获取Canvas和Context
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 设置Canvas尺寸
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            drawGame();
+        }
+        
+        // 初始化Canvas
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 生成随机目标
+        function generateTargets(count) {
+            gameState.targets = [];
+            const colors = ['#FF6B6B', '#4ECDC4', '#FFD166', '#06D6A0', '#118AB2'];
+            
+            for (let i = 0; i < count; i++) {
+                const size = 40 + Math.random() * 40;
+                gameState.targets.push({
+                    x: Math.random() * (canvas.width - size),
+                    y: Math.random() * (canvas.height - size),
+                    width: size,
+                    height: size,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    points: Math.floor(size / 10),
+                    clicked: false
+                });
+            }
+        }
+        
+        // 绘制游戏
+        function drawGame() {
+            // 清空画布
+            ctx.fillStyle = '#1a202c';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制目标
+            gameState.targets.forEach(target => {
+                if (!target.clicked) {
+                    // 主体
+                    ctx.fillStyle = target.color;
+                    ctx.fillRect(target.x, target.y, target.width, target.height);
+                    
+                    // 边框
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(target.x, target.y, target.width, target.height);
+                    
+                    // 分数
+                    ctx.fillStyle = 'white';
+                    ctx.font = 'bold 16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(target.points, target.x + target.width/2, target.y + target.height/2 + 6);
+                }
+            });
+            
+            // 绘制游戏信息
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.fillRect(10, 10, 200, 80);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(`关卡: ${gameState.level}`, 20, 35);
+            ctx.fillText(`目标: ${gameState.targets.filter(t => !t.clicked).length}/${gameState.targets.length}`, 20, 55);
+            ctx.fillText(`点击准确度: ${gameState.clicks > 0 ? Math.round((gameState.score/gameState.clicks)*100) : 0}%`, 20, 75);
+        }
+        
+        // 点击检测
+        canvas.addEventListener('click', (e) => {
+            if (!gameState.isRunning) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            gameState.clicks++;
+            document.getElementById('clicks').textContent = gameState.clicks;
+            
+            let hit = false;
+            gameState.targets.forEach(target => {
+                if (!target.clicked && 
+                    x >= target.x && x <= target.x + target.width &&
+                    y >= target.y && y <= target.y + target.height) {
+                    
+                    target.clicked = true;
+                    gameState.score += target.points;
+                    document.getElementById('score').textContent = gameState.score;
+                    hit = true;
+                    
+                    // 粒子效果
+                    createParticles(x, y, target.color);
+                    
+                    // 检查关卡完成
+                    if (gameState.targets.every(t => t.clicked)) {
+                        setTimeout(() => nextLevel(), 1000);
+                    }
+                }
+            });
+            
+            if (!hit) {
+                // 未命中效果
+                createMissEffect(x, y);
+            }
+            
+            drawGame();
+        });
+        
+        // 粒子效果
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    const particle = {
+                        x, y,
+                        vx: (Math.random() - 0.5) * 10,
+                        vy: (Math.random() - 0.5) * 10,
+                        life: 30,
+                        color
+                    };
+                    
+                    function animateParticle() {
+                        if (particle.life <= 0) return;
+                        
+                        ctx.fillStyle = particle.color;
+                        ctx.globalAlpha = particle.life / 30;
+                        ctx.fillRect(particle.x, particle.y, 4, 4);
+                        
+                        particle.x += particle.vx;
+                        particle.y += particle.vy;
+                        particle.life--;
+                        
+                        requestAnimationFrame(animateParticle);
+                    }
+                    
+                    animateParticle();
+                }, i * 30);
+            }
+        }
+        
+        // 未命中效果
+        function createMissEffect(x, y) {
+            ctx.strokeStyle = '#FF6B6B';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(x, y, 20, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            setTimeout(() => drawGame(), 300);
+        }
+        
+        // 游戏逻辑
+        function startGame() {
+            if (gameState.isRunning) return;
+            
+            gameState.isRunning = true;
+            gameState.timeLeft = 60;
+            generateTargets(5 + gameState.level * 2);
+            
+            // 更新目标描述
+            document.getElementById('currentTarget').textContent = 
+                `点击所有彩色方块（${gameState.targets.length}个目标）`;
+            
+            // 游戏循环
+            gameState.gameLoop = setInterval(() => {
+                if (gameState.timeLeft > 0) {
+                    gameState.timeLeft--;
+                    document.getElementById('time').textContent = gameState.timeLeft;
+                } else {
+                    endGame();
+                }
+            }, 1000);
+            
+            drawGame();
+        }
+        
+        function resetGame() {
+            clearInterval(gameState.gameLoop);
+            gameState = {
+                score: 0,
+                clicks: 0,
+                timeLeft: 60,
+                level: 1,
+                isRunning: false,
+                targets: [],
+                gameLoop: null
+            };
+            
+            document.getElementById('score').textContent = '0';
+            document.getElementById('clicks').textContent = '0';
+            document.getElementById('time').textContent = '60';
+            document.getElementById('level').textContent = '1';
+            
+            drawGame();
+        }
+        
+        function nextLevel() {
+            gameState.level++;
+            document.getElementById('level').textContent = gameState.level;
+            gameState.timeLeft = 60;
+            document.getElementById('time').textContent = '60';
+            generateTargets(5 + gameState.level * 2);
+            
+            document.getElementById('currentTarget').textContent = 
+                `点击所有彩色方块（${gameState.targets.length}个目标）`;
+            
+            drawGame();
+        }
+        
+        function endGame() {
+            clearInterval(gameState.gameLoop);
+            gameState.isRunning = false;
+            
+            alert(`游戏结束！\n最终得分: ${gameState.score}\n关卡: ${gameState.level}\n点击准确度: ${Math.round((gameState.score/gameState.clicks)*100)}%`);
+        }
+        
+        function saveProgress() {
+            const progress = {
+                score: gameState.score,
+                level: gameState.level,
+                timestamp: new Date().toISOString()
+            };
+            
+            localStorage.setItem('gameProgress', JSON.stringify(progress));
+            alert('进度已保存到本地存储！');
+        }
+        
+        function shareGame() {
+            const url = window.location.href;
+            if (navigator.share) {
+                navigator.share({
+                    title: '点击游戏测试',
+                    text: '来试试这个远程测试的点击游戏！',
+                    url: url
+                });
+            } else {
+                navigator.clipboard.writeText(url);
+                alert('游戏链接已复制到剪贴板！');
+            }
+        }
+        
+        // 生成部署URL和二维码
+        function generateDeployInfo() {
+            const currentUrl = window.location.href;
+            document.getElementById('gameUrl').textContent = currentUrl;
+            
+            // 生成二维码
+            QRCode.toCanvas(document.getElementById('qrcode'), currentUrl, {
+                width: 128,
+                height: 128,
+                margin: 1
+            }, function(error) {
+                if (error) console.error(error);
+            });
+        }
+        
+        // 初始化
+        window.onload = function() {
+            drawGame();
+            generateDeployInfo();
+            
+            // 尝试加载保存的进度
+            const saved = localStorage.getItem('gameProgress');
+            if (saved) {
+                const progress = JSON.parse(saved);
+                alert(`发现保存的进度：\n得分: ${progress.score}\n关卡: ${progress.level}\n时间: ${new Date(progress.timestamp).toLocaleString()}`);
+            }
+        };
+    </script>
+</body>
+</html>

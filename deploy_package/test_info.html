@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 H5游戏测试入口</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+        
+        .status-card {
+            background: #48bb78;
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .status-card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .url-box {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #c6f6d5;
+            font-family: monospace;
+            font-size: 1.2rem;
+            word-break: break-all;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .test-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .option-card {
+            background: #ebf8ff;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #4299e1;
+            transition: transform 0.3s ease;
+        }
+        
+        .option-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .option-card h3 {
+            color: #2b6cb0;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #4299e1;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+        }
+        
+        .btn-game {
+            background: #ed8936;
+        }
+        
+        .btn-game:hover {
+            background: #dd6b20;
+        }
+        
+        .btn-deploy {
+            background: #48bb78;
+        }
+        
+        .btn-deploy:hover {
+            background: #38a169;
+        }
+        
+        .instructions {
+            background: #fffaf0;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px dashed #ed8936;
+            margin-top: 30px;
+        }
+        
+        .instructions h3 {
+            color: #dd6b20;
+            margin-bottom: 15px;
+        }
+        
+        ol {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+        
+        .qr-section {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f0fff4;
+            border-radius: 15px;
+        }
+        
+        #qrcode {
+            display: inline-block;
+            margin: 20px auto;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .test-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 H5点击游戏 - 远程测试平台</h1>
+        
+        <div class="status-card">
+            <h2>✅ 服务器运行正常</h2>
+            <p>游戏已准备就绪，可以开始测试！</p>
+        </div>
+        
+        <div class="url-box" id="gameUrl">
+            http://localhost:8001/index.html
+        </div>
+        
+        <div class="test-options">
+            <div class="option-card">
+                <h3>🎯 测试游戏</h3>
+                <p>立即体验完整的H5点击游戏，包含关卡、得分、进度保存等功能。</p>
+                <a href="/index.html" class="btn btn-game">开始游戏测试</a>
+            </div>
+            
+            <div class="option-card">
+                <h3>🚀 一键部署</h3>
+                <p>部署到GitHub Pages、Vercel或Netlify，生成公网可访问的URL。</p>
+                <a href="#" onclick="runDeployScript()" class="btn btn-deploy">运行部署脚本</a>
+            </div>
+            
+            <div class="option-card">
+                <h3>📱 手机测试</h3>
+                <p>扫描二维码在手机浏览器测试，体验响应式设计。</p>
+                <div id="qrcode"></div>
+            </div>
+        </div>
+        
+        <div class="qr-section">
+            <h3>📲 手机测试二维码</h3>
+            <p>使用手机摄像头扫描二维码，立即在手机浏览器中测试游戏：</p>
+            <div id="qrcodeContainer"></div>
+            <p><small>确保手机和电脑在同一网络下</small></p>
+        </div>
+        
+        <div class="instructions">
+            <h3>📋 测试说明</h3>
+            <ol>
+                <li><strong>电脑测试</strong>：点击"开始游戏测试"按钮</li>
+                <li><strong>手机测试</strong>：扫描上方二维码（需同一网络）</li>
+                <li><strong>远程测试</strong>：运行部署脚本，获取公网URL</li>
+                <li><strong>游戏功能</strong>：点击目标得分、多关卡、进度保存、分享</li>
+                <li><strong>响应式设计</strong>：自动适配手机和电脑屏幕</li>
+            </ol>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <p>🎮 游戏由OpenClaw AI生成 | 🌐 远程测试就绪 | 📅 2026-03-03</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script>
+        // 生成当前URL的二维码
+        function generateQRCode() {
+            const gameUrl = window.location.origin + '/index.html';
+            document.getElementById('gameUrl').textContent = gameUrl;
+            
+            QRCode.toCanvas(document.getElementById('qrcodeContainer'), gameUrl, {
+                width: 200,
+                height: 200,
+                margin: 1,
+                color: {
+                    dark: '#2d3748',
+                    light: '#ffffff'
+                }
+            }, function(error) {
+                if (error) console.error(error);
+            });
+        }
+        
+        // 运行部署脚本
+        function runDeployScript() {
+            alert('部署脚本功能需要终端访问权限。\n\n可以在终端运行：\ncd /home/node/.openclaw/workspace/h5_click_game\n./deploy.sh');
+            return false;
+        }
+        
+        // 页面加载完成后生成二维码
+        window.addEventListener('load', generateQRCode);
+        
+        // 获取本地IP地址（用于手机测试）
+        async function getLocalIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                return data.ip;
+            } catch (error) {
+                return 'localhost';
+            }
+        }
+        
+        // 更新URL显示为实际IP（如果可能）
+        getLocalIP().then(ip => {
+            if (ip !== 'localhost') {
+                const url = `http://${ip}:8001/index.html`;
+                document.getElementById('gameUrl').textContent = url;
+                
+                // 重新生成二维码
+                QRCode.toCanvas(document.getElementById('qrcodeContainer'), url, {
+                    width: 200,
+                    height: 200,
+                    margin: 1
+                });
+            }
+        });
+    </script>
+</body>
+</html>
